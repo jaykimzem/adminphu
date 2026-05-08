@@ -26,7 +26,7 @@ class AdminApp {
         }
 
         this.session = session;
-        document.getElementById('admin-email').textContent = session ? session.user.email : 'admin';
+        document.getElementById('admin-display-name').textContent = session ? session.user.email : 'Admin';
 
         // Initialize Lucide icons
         lucide.createIcons();

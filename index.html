@@ -17,8 +17,8 @@
 
             <form id="login-form">
                 <div class="form-group">
-                    <label for="email">Email Address</label>
-                    <input type="email" id="email" required placeholder="admin@phumolomarathon.co.ke">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" required placeholder="Enter username">
                 </div>
                 <div class="form-group">
                     <label for="password">Password</label>
@@ -41,13 +41,13 @@
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('email').value;
+            const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
 
             errorMessage.style.display = 'none';
 
             // Simple login as requested
-            if (email === 'admin' && password === '12345678') {
+            if (username === 'admin' && password === '12345678') {
                 localStorage.setItem('admin_logged_in', 'true');
                 localStorage.setItem('admin_user', 'admin');
                 window.location.href = 'dashboard.html';
