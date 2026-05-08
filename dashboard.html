@@ -27,33 +27,36 @@
                         <span>System Overview</span>
                     </a>
                 </div>
-                <div class="nav-item">
-                    <p style="padding: 0.75rem 1rem; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Data Tables</p>
+                
+                <div class="nav-item" style="margin-top: 1.5rem;">
+                    <p style="padding: 0.75rem 1rem; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center;">
+                        Data Tables
+                        <button onclick="window.app.scanForTables()" class="btn btn-sm" style="padding: 2px 6px; font-size: 10px; background: rgba(255,255,255,0.05);">Scan</button>
+                    </p>
                 </div>
-                <div class="nav-item">
-                    <a href="#" class="nav-link" data-view="registrations">
-                        <i data-lucide="users"></i>
-                        <span>Main Registrations</span>
+                <div id="dynamic-nav-links">
+                    <!-- Tables will be injected here -->
+                    <div class="nav-item">
+                        <a href="#" class="nav-link" data-view="registrations">
+                            <i data-lucide="table"></i>
+                            <span>registrations</span>
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a href="#" class="nav-link" data-view="volunteers">
+                            <i data-lucide="table"></i>
+                            <span>volunteers</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="nav-item" style="margin-top: 1.5rem;">
+                    <a href="#" class="nav-link" onclick="window.app.showCustomTablePrompt()">
+                        <i data-lucide="plus-circle"></i>
+                        <span>Open Table...</span>
                     </a>
                 </div>
-                <div class="nav-item">
-                    <a href="#" class="nav-link" data-view="volunteers">
-                        <i data-lucide="user-plus"></i>
-                        <span>Volunteers</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="#" class="nav-link" data-view="karura_runners">
-                        <i data-lucide="trophy"></i>
-                        <span>Karura Run</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="#" class="nav-link" data-view="sponsorships">
-                        <i data-lucide="heart"></i>
-                        <span>Sponsorships</span>
-                    </a>
-                </div>
+
 
             </nav>
 
@@ -139,64 +142,23 @@
                 </div>
             </div>
 
-            <!-- Registrations Content -->
-            <div id="registrations-content" class="view-panel animate-fade-in" style="display: none;">
+            <!-- Generic Data View Content -->
+            <div id="data-view-content" class="view-panel animate-fade-in" style="display: none;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                    <div style="display: flex; gap: 1rem; flex-grow: 1; max-width: 600px;">
-                        <input type="text" id="reg-search" placeholder="Search records..." style="flex-grow: 1;">
-                        <select id="reg-filter-category" style="width: 150px;">
-                            <option value="">All Categories</option>
-                            <option value="5KM">5KM</option>
-                            <option value="10KM">10KM</option>
-                            <option value="21KM">21KM</option>
-                            <option value="42KM">42KM</option>
-                        </select>
-                        <select id="reg-filter-status" style="width: 150px;">
-                            <option value="">All Status</option>
-                            <option value="Confirmed">Confirmed</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Cancelled">Cancelled</option>
-                        </select>
+                    <div style="display: flex; gap: 1rem; flex-grow: 1; max-width: 400px;">
+                        <input type="text" id="data-search" placeholder="Filter current view..." style="flex-grow: 1;">
                     </div>
-                    <button id="export-csv" class="btn btn-primary">
-                        <i data-lucide="download" style="width: 16px; height: 16px; margin-right: 0.5rem; vertical-align: middle;"></i>
-                        Export CSV
-                    </button>
+                    <div style="display: flex; gap: 1rem;">
+                        <button id="data-export-csv" class="btn btn-outline">Export CSV</button>
+                        <button id="data-refresh" class="btn btn-primary">Refresh</button>
+                    </div>
                 </div>
 
-                <div class="table-container glass">
-                    <table id="main-reg-table">
-                        <thead>
-                            <tr>
-                                <th>BIB #</th>
-                                <th>Full Name</th>
-                                <th>Gender</th>
-                                <th>Age</th>
-                                <th>Category</th>
-                                <th>Shirt</th>
-                                <th>Payment</th>
-                                <th>Registered</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="all-registrations-table">
-                            <!-- Populated by JS -->
-                        </tbody>
-                    </table>
-                    <div style="padding: 1rem; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border);">
-                        <p id="table-stats" style="color: var(--text-muted); font-size: 0.875rem;"></p>
-                        <div style="display: flex; gap: 0.5rem;">
-                            <button class="btn btn-outline" id="prev-page">Previous</button>
-                            <button class="btn btn-outline" id="next-page">Next</button>
-                        </div>
-                    </div>
+                <div id="data-table-container">
+                    <!-- Generic table content will be injected here -->
                 </div>
             </div>
 
-            <!-- Other views (Volunteers, etc.) would follow similar patterns -->
-             <div id="generic-content" class="view-panel animate-fade-in" style="display: none;">
-                <p style="text-align: center; padding: 5rem; color: var(--text-muted);">Content for this section is being dynamically loaded...</p>
-             </div>
 
         </main>
     </div>
