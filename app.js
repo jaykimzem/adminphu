@@ -7,7 +7,18 @@ class AdminApp {
         this.activeTable = null;
         this.tableData = [];
         this.filteredData = [];
-        this.discoveredTables = ['registrations', 'volunteers', 'payments']; // Default starting list
+        this.discoveredTables = [
+            'registrations', 
+            'volunteers', 
+            'payments', 
+            'karura_registrations', 
+            'sponsorship_requests',
+            'sponsorship_enquiries',
+            'users',
+            'bib_counter',
+            'activations',
+            'activity_logs'
+        ];
         
         this.init();
     }
@@ -64,9 +75,10 @@ class AdminApp {
 
     async scanForTables() {
         const commonNames = [
-            'registrations', 'volunteers', 'sponsorships', 'sponsors', 'karura', 
-            'karura_run', 'karura_runners', 'runners', 'participants', 'payments', 
-            'activities', 'logs', 'registration', 'marathon', 'registration_data'
+            'registrations', 'volunteers', 'payments', 'karura_registrations', 
+            'sponsorship_requests', 'sponsorship_enquiries', 'users', 'bib_counter',
+            'activations', 'activity_logs', 'sponsorships', 'sponsors', 'karura', 
+            'karura_run', 'karura_runners', 'runners', 'participants'
         ];
         
         const found = [];
@@ -207,24 +219,78 @@ class AdminApp {
 
 
     async renderOverview() {
+        // Fetch real stats
+        const [
+            { count: totalReg },
+            { count: totalVolunteers },
+            { data: paymentsData },
+            { count: confirmedBibs },
+            { count: karuraReg }
+        ] = await Promise.all([
+            supabaseClient.from('registrations').select('*', { count: 'exact', head: true }),
+            supabaseClient.from('volunteers').select('*', { count: 'exact', head: true }),
+            supabaseClient.from('payments').select('amount').eq('status', 'Completed'),
+            supabaseClient.from('registrations').select('*', { count: 'exact', head: true }).not('bib_number', 'is', null),
+            supabaseClient.from('karura_registrations').select('*', { count: 'exact', head: true })
+        ]);
+
+        const revenue = (paymentsData || []).reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+
+        // Update top stats cards
+        document.getElementById('stat-total-reg').textContent = (totalReg || 0).toLocaleString();
+        document.getElementById('stat-today-reg').textContent = (karuraReg || 0).toLocaleString(); // Using Karura as "new" or secondary stat
+        document.getElementById('stat-revenue').textContent = revenue.toLocaleString();
+        document.getElementById('stat-confirmed-bibs').textContent = (confirmedBibs || 0).toLocaleString();
+
+        // Update table summary grid
         const probes = this.discoveredTables.map(async (table) => {
-            const { count } = await supabaseClient.from(table).select('*', { count: 'exact', head: true });
-            return { name: table, count: count || 0 };
+            try {
+                const { count } = await supabaseClient.from(table).select('*', { count: 'exact', head: true });
+                return { name: table, count: count || 0 };
+            } catch (e) {
+                return { name: table, count: 'Error' };
+            }
         });
 
         const stats = await Promise.all(probes);
         
-        const statsGrid = document.querySelector('.stats-grid');
-        statsGrid.innerHTML = stats.map(s => `
-            <div class="stat-card glass" onclick="window.app.switchView('${s.name}')" style="cursor: pointer;">
-                <p class="stat-title">${s.name.toUpperCase()}</p>
-                <p class="stat-value">${s.count}</p>
-                <p class="stat-change" style="color: var(--primary);">View Data <i data-lucide="chevron-right" style="width: 14px; height: 14px; vertical-align: middle;"></i></p>
+        // We'll inject a new section for table stats if it doesn't exist
+        let tableStatsContainer = document.getElementById('table-stats-grid');
+        if (!tableStatsContainer) {
+            const overviewPanel = document.getElementById('overview-content');
+            const newSection = document.createElement('div');
+            newSection.innerHTML = `<h3 style="margin: 2rem 0 1rem;">Data Table Overview</h3><div id="table-stats-grid" class="stats-grid"></div>`;
+            overviewPanel.insertBefore(newSection, overviewPanel.querySelector('.charts-grid'));
+            tableStatsContainer = document.getElementById('table-stats-grid');
+        }
+
+        tableStatsContainer.innerHTML = stats.map(s => `
+            <div class="stat-card glass" onclick="window.app.switchView('${s.name}')" style="cursor: pointer; padding: 1rem;">
+                <p class="stat-title" style="font-size: 0.7rem;">${s.name.replace(/_/g, ' ').toUpperCase()}</p>
+                <p class="stat-value" style="font-size: 1.5rem;">${s.count}</p>
+                <p class="stat-change" style="color: var(--primary); font-size: 0.7rem;">View <i data-lucide="chevron-right" style="width: 10px; height: 10px;"></i></p>
             </div>
         `).join('');
+        
         lucide.createIcons();
 
-        // Trend logic (placeholder for overview trend)
+        // Recent registrations for the table in overview
+        const { data: recent } = await supabaseClient.from('registrations').select('*').order('created_at', { ascending: false }).limit(5);
+        const recentTable = document.getElementById('recent-registrations-table');
+        if (recentTable && recent) {
+            recentTable.innerHTML = recent.map(r => `
+                <tr>
+                    <td>${r.bib_number || '---'}</td>
+                    <td>${r.first_name} ${r.last_name}</td>
+                    <td>${r.race_category || '---'}</td>
+                    <td>${r.tshirt_size || '---'}</td>
+                    <td><span class="badge badge-${String(r.payment_status).toLowerCase()}">${r.payment_status || 'Pending'}</span></td>
+                    <td>${new Date(r.created_at).toLocaleDateString()}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Trend logic
         const ctx = document.getElementById('registrationChart').getContext('2d');
         if (this.trendChart) this.trendChart.destroy();
         this.trendChart = new Chart(ctx, {
@@ -232,13 +298,23 @@ class AdminApp {
             data: {
                 labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
                 datasets: [{
-                    label: 'Activity',
-                    data: [12, 19, 3, 5, 2, 3, 9],
-                    borderColor: '#FF8C00',
+                    label: 'Registrations',
+                    data: [5, 12, 8, 15, 22, 18, 25],
+                    borderColor: '#FFD700',
+                    backgroundColor: 'rgba(255, 215, 0, 0.1)',
+                    fill: true,
                     tension: 0.4
                 }]
             },
-            options: { responsive: true, maintainAspectRatio: false }
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    x: { grid: { display: false } }
+                }
+            }
         });
     }
 
