@@ -236,27 +236,31 @@ body {
 }
 
 /* Tables */
+/* Client Friendly Table Styling */
 .table-container {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     overflow-x: auto;
     background: var(--surface);
     border-radius: 16px;
     border: 1px solid var(--border);
 }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
 th {
+    text-transform: capitalize;
+    letter-spacing: 0.5px;
+    font-weight: 600;
     text-align: left;
     padding: 1rem;
     background: rgba(255, 255, 255, 0.03);
     color: var(--text-muted);
     font-size: 0.875rem;
-    font-weight: 500;
     border-bottom: 1px solid var(--border);
 }
+
+.stat-card {
+    border-left: 4px solid var(--primary);
+}
+
 
 td {
     padding: 1rem;

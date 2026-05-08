@@ -91,7 +91,7 @@ class AdminApp {
             <div class="nav-item">
                 <a href="#" class="nav-link ${this.activeTable === table ? 'active' : ''}" data-view="${table}">
                     <i data-lucide="table"></i>
-                    <span>${table}</span>
+                    <span>${table.charAt(0).toUpperCase() + table.slice(1).replace(/_/g, ' ')}</span>
                 </a>
             </div>
         `).join('');
@@ -171,15 +171,17 @@ class AdminApp {
             return;
         }
 
-        const keys = Object.keys(this.tableData[0]);
+        // Hide technical columns for a cleaner client experience
+        const technicalColumns = ['id', 'created_at', 'updated_at', 'deleted_at', 'id_number', 'uuid'];
+        const keys = Object.keys(this.tableData[0]).filter(k => !technicalColumns.includes(k.toLowerCase()));
         
         container.innerHTML = `
-            <div class="table-container glass">
+            <div class="table-container glass animate-fade-in">
                 <table>
                     <thead>
                         <tr>
-                            ${keys.map(k => `<th>${k.toUpperCase().replace(/_/g, ' ')}</th>`).join('')}
-                            ${this.activeTable === 'registrations' ? '<th>ACTIONS</th>' : ''}
+                            ${keys.map(k => `<th>${k.replace(/_/g, ' ')}</th>`).join('')}
+                            ${this.activeTable === 'registrations' ? '<th>Action</th>' : ''}
                         </tr>
                     </thead>
                     <tbody>
@@ -187,13 +189,14 @@ class AdminApp {
                             <tr>
                                 ${keys.map(k => {
                                     let val = row[k];
-                                    if (val === null) return '<td><span style="color: var(--text-muted);">---</span></td>';
-                                    if (typeof val === 'boolean') return `<td><span class="badge ${val ? 'badge-confirmed' : 'badge-cancelled'}">${val}</span></td>`;
+                                    if (val === null || val === undefined) return '<td><span style="color: var(--text-muted);">---</span></td>';
+                                    if (typeof val === 'boolean') return `<td><span class="badge ${val ? 'badge-confirmed' : 'badge-cancelled'}">${val ? 'Yes' : 'No'}</span></td>`;
                                     if (k.toLowerCase().includes('status')) return `<td><span class="badge badge-${String(val).toLowerCase()}">${val}</span></td>`;
                                     if (k.toLowerCase().includes('at')) return `<td>${new Date(val).toLocaleDateString()}</td>`;
+                                    if (k.toLowerCase().includes('phone')) return `<td><a href="tel:${val}" style="color: var(--primary); text-decoration: none;">${val}</a></td>`;
                                     return `<td>${val}</td>`;
                                 }).join('')}
-                                ${this.activeTable === 'registrations' ? `<td><button class="btn btn-outline btn-sm" onclick="window.app.openProfile('${row.id}')">View</button></td>` : ''}
+                                ${this.activeTable === 'registrations' ? `<td><button class="btn btn-outline btn-sm" onclick="window.app.openProfile('${row.id}')">View Profile</button></td>` : ''}
                             </tr>
                         `).join('')}
                     </tbody>
@@ -201,6 +204,7 @@ class AdminApp {
             </div>
         `;
     }
+
 
     async renderOverview() {
         const probes = this.discoveredTables.map(async (table) => {
