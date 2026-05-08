@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Phumolo Marathon Admin</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card glass animate-fade-in">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <img src="assets/Logo Main.png" alt="Phumolo Marathon" style="height: 60px; margin-bottom: 1rem;">
+                <h1 style="font-size: 1.5rem; color: var(--primary);">Admin Portal</h1>
+                <p style="color: var(--text-muted);">Sign in to manage registrations</p>
+            </div>
+
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" required placeholder="admin@phumolomarathon.co.ke">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Sign In</button>
+                <p id="error-message" style="color: var(--error); margin-top: 1rem; text-align: center; display: none;"></p>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module">
+        import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
+
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const form = document.getElementById('login-form');
+        const errorMessage = document.getElementById('error-message');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            errorMessage.style.display = 'none';
+
+            // Simple login as requested
+            if (email === 'admin' && password === '12345678') {
+                localStorage.setItem('admin_logged_in', 'true');
+                localStorage.setItem('admin_user', 'admin');
+                window.location.href = 'dashboard.html';
+                return;
+            }
+
+            // Fallback to Supabase Auth if needed
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
+
+            if (error) {
+                errorMessage.textContent = 'Invalid credentials';
+                errorMessage.style.display = 'block';
+            } else {
+                window.location.href = 'dashboard.html';
+            }
+        });
+
+        // Check if already logged in
+        async function checkSession() {
+            if (localStorage.getItem('admin_logged_in') === 'true') {
+                window.location.href = 'dashboard.html';
+                return;
+            }
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                window.location.href = 'dashboard.html';
+            }
+        }
+        checkSession();
+
+    </script>
+</body>
+</html>

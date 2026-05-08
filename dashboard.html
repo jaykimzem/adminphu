@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Phumolo Marathon Admin</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div id="loader" class="loader-overlay">
+        <span class="loader"></span>
+    </div>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <img src="assets/Logo Main.png" alt="Logo">
+                <h1>Phumolo</h1>
+            </div>
+
+            <nav class="nav-links">
+                <div class="nav-item">
+                    <a href="#" class="nav-link active" data-view="overview">
+                        <i data-lucide="layout-dashboard"></i>
+                        <span>Overview</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="#" class="nav-link" data-view="registrations">
+                        <i data-lucide="users"></i>
+                        <span>Registrations</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="#" class="nav-link" data-view="volunteers">
+                        <i data-lucide="user-plus"></i>
+                        <span>Volunteers</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="#" class="nav-link" data-view="karura_runners">
+                        <i data-lucide="trophy"></i>
+                        <span>Karura Run</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="#" class="nav-link" data-view="sponsorships">
+                        <i data-lucide="heart"></i>
+                        <span>Sponsors</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="#" id="logout-btn" class="nav-link" style="color: var(--error);">
+                    <i data-lucide="log-out"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="header">
+                <h2 id="view-title">Dashboard Overview</h2>
+                <div class="user-profile">
+                    <div style="text-align: right;">
+                        <p id="admin-email" style="font-weight: 500;"></p>
+                        <p style="font-size: 0.75rem; color: var(--text-muted);">Administrator</p>
+                    </div>
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                        A
+                    </div>
+                </div>
+            </header>
+
+            <!-- Overview Content -->
+            <div id="overview-content" class="view-panel active animate-fade-in">
+                <div class="stats-grid">
+                    <div class="stat-card glass">
+                        <p class="stat-title">Total Registrations</p>
+                        <p class="stat-value" id="stat-total-reg">0</p>
+                        <p class="stat-change" style="color: var(--success);"><i data-lucide="trending-up" style="width: 14px; height: 14px; vertical-align: middle;"></i> +12% this week</p>
+                    </div>
+                    <div class="stat-card glass">
+                        <p class="stat-title">Today's Signups</p>
+                        <p class="stat-value" id="stat-today-reg">0</p>
+                        <p class="stat-change" style="color: var(--text-muted);">New arrivals</p>
+                    </div>
+                    <div class="stat-card glass">
+                        <p class="stat-title">Revenue (KSH)</p>
+                        <p class="stat-value" id="stat-revenue">0</p>
+                        <p class="stat-change" style="color: var(--success);">Confirmed payments</p>
+                    </div>
+                    <div class="stat-card glass">
+                        <p class="stat-title">Confirmed BIBs</p>
+                        <p class="stat-value" id="stat-confirmed-bibs">0</p>
+                        <p class="stat-change" style="color: var(--warning);">Pending: <span id="stat-pending-bibs">0</span></p>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-container glass">
+                        <h3 style="margin-bottom: 1rem;">Registration Trend (Last 14 Days)</h3>
+                        <canvas id="registrationChart"></canvas>
+                    </div>
+                    <div class="chart-container glass">
+                        <h3 style="margin-bottom: 1rem;">Race Distribution</h3>
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="table-container glass">
+                    <div style="padding: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="font-size: 1.125rem;">Recent Registrations</h3>
+                        <button class="btn btn-outline" onclick="window.app.switchView('registrations')">View All</button>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>BIB #</th>
+                                <th>Runner</th>
+                                <th>Category</th>
+                                <th>Shirt</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recent-registrations-table">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Registrations Content -->
+            <div id="registrations-content" class="view-panel animate-fade-in" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <div style="display: flex; gap: 1rem; flex-grow: 1; max-width: 600px;">
+                        <input type="text" id="reg-search" placeholder="Search by name, BIB, email or ID..." style="flex-grow: 1;">
+                        <select id="reg-filter-category" style="width: 150px;">
+                            <option value="">All Categories</option>
+                            <option value="5KM">5KM</option>
+                            <option value="10KM">10KM</option>
+                            <option value="21KM">21KM</option>
+                            <option value="42KM">42KM</option>
+                        </select>
+                        <select id="reg-filter-status" style="width: 150px;">
+                            <option value="">All Status</option>
+                            <option value="Confirmed">Confirmed</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    <button id="export-csv" class="btn btn-primary">
+                        <i data-lucide="download" style="width: 16px; height: 16px; margin-right: 0.5rem; vertical-align: middle;"></i>
+                        Export CSV
+                    </button>
+                </div>
+
+                <div class="table-container glass">
+                    <table id="main-reg-table">
+                        <thead>
+                            <tr>
+                                <th>BIB #</th>
+                                <th>Full Name</th>
+                                <th>Gender</th>
+                                <th>Age</th>
+                                <th>Category</th>
+                                <th>Shirt</th>
+                                <th>Payment</th>
+                                <th>Registered</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="all-registrations-table">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                    <div style="padding: 1rem; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border);">
+                        <p id="table-stats" style="color: var(--text-muted); font-size: 0.875rem;"></p>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-outline" id="prev-page">Previous</button>
+                            <button class="btn btn-outline" id="next-page">Next</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Other views (Volunteers, etc.) would follow similar patterns -->
+             <div id="generic-content" class="view-panel animate-fade-in" style="display: none;">
+                <p style="text-align: center; padding: 5rem; color: var(--text-muted);">Content for this section is being dynamically loaded...</p>
+             </div>
+
+        </main>
+    </div>
+
+    <!-- Runner Profile Modal -->
+    <div id="profile-modal" class="modal-overlay">
+        <div class="modal-content glass animate-fade-in">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem;">
+                <div>
+                    <h2 style="font-size: 2rem; margin-bottom: 0.5rem;" id="modal-name">Runner Name</h2>
+                    <p style="color: var(--text-muted);" id="modal-subtext">Category | Gender | Age</p>
+                </div>
+                <button class="btn btn-outline" onclick="window.app.closeModal()">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                <div class="glass" style="padding: 1.5rem;">
+                    <h3 style="margin-bottom: 1.5rem; color: var(--primary);">Contact Details</h3>
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <p id="modal-email">-</p>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <p id="modal-phone">-</p>
+                    </div>
+                    <div class="form-group">
+                        <label>ID / Passport Number</label>
+                        <p id="modal-id">-</p>
+                    </div>
+                    <div class="form-group">
+                        <label>Emergency Contact</label>
+                        <p id="modal-emergency">-</p>
+                    </div>
+                </div>
+
+                <div class="glass" style="padding: 1.5rem; display: flex; flex-direction: column; align-items: center;">
+                    <h3 style="margin-bottom: 1.5rem; color: var(--primary); align-self: flex-start;">Event Info</h3>
+                    
+                    <div id="printable-bib" class="bib-card">
+                        <img src="assets/Logo Main.png" alt="Phumolo" style="height: 30px;">
+                        <p class="bib-number" id="modal-bib">-</p>
+                        <div style="text-align: center;">
+                            <p class="bib-name" id="modal-bib-name">-</p>
+                            <p class="bib-category" id="modal-bib-category">-</p>
+                        </div>
+                    </div>
+
+                    <div style="width: 100%; margin-top: 1.5rem;">
+                         <div class="form-group">
+                            <label>Shirt Details</label>
+                            <p id="modal-shirt">-</p>
+                        </div>
+                        <div class="form-group">
+                            <label>Payment Status</label>
+                            <div style="display: flex; gap: 1rem; align-items: center;">
+                                <span id="modal-status-badge" class="badge">Pending</span>
+                                <select id="update-status-select" style="width: auto;">
+                                    <option value="Pending">Pending</option>
+                                    <option value="Confirmed">Confirmed</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                </select>
+                                <button class="btn btn-primary btn-sm" onclick="window.app.updatePaymentStatus()">Update</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 1rem;">
+                <button class="btn btn-outline" onclick="window.print()">
+                    <i data-lucide="printer" style="width: 16px; height: 16px; margin-right: 0.5rem; vertical-align: middle;"></i>
+                    Print BIB
+                </button>
+                <button class="btn btn-primary" onclick="window.app.closeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="app.js"></script>
+</body>
+</html>
