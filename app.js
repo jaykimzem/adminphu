@@ -1,6 +1,7 @@
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
+// Use global variables from config.js and supabase from CDN
+// SUPABASE_URL and SUPABASE_ANON_KEY are defined in config.js
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 class AdminApp {
     constructor() {
@@ -17,7 +18,14 @@ class AdminApp {
 
     async init() {
         // Auth check
-        const { data: { session } } = await supabase.auth.getSession();
+        let session = null;
+        try {
+            const { data } = await supabaseClient.auth.getSession();
+            session = data.session;
+        } catch (e) {
+            console.warn('Supabase session check failed');
+        }
+
         const isLocalAuth = localStorage.getItem('admin_logged_in') === 'true';
 
         if (!session && !isLocalAuth) {
@@ -60,8 +68,12 @@ class AdminApp {
 
         // Logout
         document.getElementById('logout-btn').addEventListener('click', async (e) => {
-            e.preventDefault();
-            await supabase.auth.signOut();
+            if (e) e.preventDefault();
+            localStorage.removeItem('admin_logged_in');
+            localStorage.removeItem('admin_user');
+            try {
+                await supabaseClient.auth.signOut();
+            } catch (e) {}
             window.location.href = 'index.html';
         });
 
@@ -91,7 +103,7 @@ class AdminApp {
     async fetchData() {
         try {
             // Fetch registrations
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('registrations')
                 .select('*')
                 .order('submitted_at', { ascending: false });
@@ -122,11 +134,11 @@ class AdminApp {
         
         if (view === 'overview') {
             document.getElementById('overview-content').style.display = 'block';
-            viewTitle.textContent = 'Dashboard Overview';
+            viewTitle.textContent = 'System Overview';
             this.renderOverview();
         } else if (view === 'registrations') {
             document.getElementById('registrations-content').style.display = 'block';
-            viewTitle.textContent = 'Runner Registrations';
+            viewTitle.textContent = 'Main Registrations';
             this.renderAllRegistrations();
         } else {
             // Generic view for other tables
@@ -151,7 +163,6 @@ class AdminApp {
         const confirmed = this.registrations.filter(r => r.payment_status === 'Confirmed').length;
         const pending = this.registrations.filter(r => r.payment_status === 'Pending').length;
         
-        // Assuming registration fee is 2500 (placeholder logic)
         const revenue = confirmed * 2500;
 
         document.getElementById('stat-total-reg').textContent = total;
@@ -177,11 +188,9 @@ class AdminApp {
     }
 
     initCharts() {
-        // Destroy existing charts if any
         if (this.regChart) this.regChart.destroy();
         if (this.catChart) this.catChart.destroy();
 
-        // Trend Chart (Last 14 Days)
         const last14Days = [...Array(14)].map((_, i) => {
             const d = new Date();
             d.setDate(d.getDate() - i);
@@ -217,7 +226,6 @@ class AdminApp {
             }
         });
 
-        // Category Chart
         const categories = ['5KM', '10KM', '21KM', '42KM'];
         const catData = categories.map(cat => this.registrations.filter(r => r.race_category === cat).length);
 
@@ -304,7 +312,7 @@ class AdminApp {
         document.getElementById('modal-id').textContent = runner.id_number;
         document.getElementById('modal-emergency').textContent = `${runner.emergency_contact_name} (${runner.emergency_contact_phone})`;
         document.getElementById('modal-shirt').textContent = `${runner.shirt_size} / ${runner.shirt_color}`;
-        document.getElementById('modal-bib').textContent = runner.bib_number || 'PENDING';
+        document.getElementById('modal-bib').textContent = runner.bib_number || '---';
         document.getElementById('modal-bib-name').textContent = `${runner.first_name} ${runner.last_name}`.toUpperCase();
         document.getElementById('modal-bib-category').textContent = runner.race_category;
         
@@ -327,20 +335,19 @@ class AdminApp {
         const newStatus = document.getElementById('update-status-select').value;
         
         try {
-            const { error } = await supabase
+            const { error } = await supabaseClient
                 .from('registrations')
                 .update({ payment_status: newStatus })
                 .eq('id', this.currentRunner.id);
 
             if (error) throw error;
             
-            // Update local state
             this.currentRunner.payment_status = newStatus;
             const idx = this.registrations.findIndex(r => r.id === this.currentRunner.id);
             if (idx !== -1) this.registrations[idx].payment_status = newStatus;
             
-            this.openProfile(this.currentRunner.id); // Refresh modal
-            this.render(); // Refresh background
+            this.openProfile(this.currentRunner.id);
+            this.render();
             alert('Status updated successfully!');
         } catch (err) {
             console.error('Update failed:', err);
@@ -353,7 +360,7 @@ class AdminApp {
         container.innerHTML = `<p style="text-align: center; padding: 5rem;">Loading ${tableName}...</p>`;
         
         try {
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from(tableName)
                 .select('*')
                 .limit(100);
@@ -428,4 +435,6 @@ class AdminApp {
 }
 
 // Start the app
-new AdminApp();
+document.addEventListener('DOMContentLoaded', () => {
+    new AdminApp();
+});

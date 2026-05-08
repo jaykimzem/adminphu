@@ -31,22 +31,23 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script type="module">
-        import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
-
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    <script src="config.js"></script>
+    <script>
+        // Use global supabase from CDN and global vars from config.js
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         const form = document.getElementById('login-form');
         const errorMessage = document.getElementById('error-message');
 
         form.addEventListener('submit', async (e) => {
-            e.preventDefault();
+            if (e) e.preventDefault();
+            
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
 
             errorMessage.style.display = 'none';
 
-            // Simple login as requested
+            // Hardcoded check as requested
             if (username === 'admin' && password === '12345678') {
                 localStorage.setItem('admin_logged_in', 'true');
                 localStorage.setItem('admin_user', 'admin');
@@ -54,33 +55,38 @@
                 return;
             }
 
-            // Fallback to Supabase Auth if needed
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-            });
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: username,
+                    password: password,
+                });
 
-            if (error) {
-                errorMessage.textContent = 'Invalid credentials';
+                if (error) {
+                    errorMessage.textContent = 'Invalid credentials';
+                    errorMessage.style.display = 'block';
+                } else {
+                    window.location.href = 'dashboard.html';
+                }
+            } catch (err) {
+                errorMessage.textContent = 'Connection error';
                 errorMessage.style.display = 'block';
-            } else {
-                window.location.href = 'dashboard.html';
             }
         });
 
-        // Check if already logged in
         async function checkSession() {
             if (localStorage.getItem('admin_logged_in') === 'true') {
                 window.location.href = 'dashboard.html';
                 return;
             }
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session) {
-                window.location.href = 'dashboard.html';
-            }
+            // Supabase session check
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session) {
+                    window.location.href = 'dashboard.html';
+                }
+            } catch (e) {}
         }
         checkSession();
-
     </script>
 </body>
 </html>
