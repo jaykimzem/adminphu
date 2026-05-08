@@ -24,13 +24,16 @@
                 <div class="nav-item">
                     <a href="#" class="nav-link active" data-view="overview">
                         <i data-lucide="layout-dashboard"></i>
-                        <span>Overview</span>
+                        <span>System Overview</span>
                     </a>
+                </div>
+                <div class="nav-item">
+                    <p style="padding: 0.75rem 1rem; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Data Tables</p>
                 </div>
                 <div class="nav-item">
                     <a href="#" class="nav-link" data-view="registrations">
                         <i data-lucide="users"></i>
-                        <span>Registrations</span>
+                        <span>Main Registrations</span>
                     </a>
                 </div>
                 <div class="nav-item">
@@ -48,9 +51,10 @@
                 <div class="nav-item">
                     <a href="#" class="nav-link" data-view="sponsorships">
                         <i data-lucide="heart"></i>
-                        <span>Sponsors</span>
+                        <span>Sponsorships</span>
                     </a>
                 </div>
+
             </nav>
 
             <div class="sidebar-footer">
@@ -139,7 +143,7 @@
             <div id="registrations-content" class="view-panel animate-fade-in" style="display: none;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                     <div style="display: flex; gap: 1rem; flex-grow: 1; max-width: 600px;">
-                        <input type="text" id="reg-search" placeholder="Search by name, BIB, email or ID..." style="flex-grow: 1;">
+                        <input type="text" id="reg-search" placeholder="Search records..." style="flex-grow: 1;">
                         <select id="reg-filter-category" style="width: 150px;">
                             <option value="">All Categories</option>
                             <option value="5KM">5KM</option>
