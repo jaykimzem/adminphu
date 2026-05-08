@@ -1,2 +1,2 @@
 const SUPABASE_URL = 'https://lqttzudtwarkwyxcnssd.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_UYNtiM0r3GfdtYpIdR-AeQ_oH2ivH7p';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxxdHR6dWR0d2Fya3d5eGNuc3NkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODAxMDUxMywiZXhwIjoyMDkzNTg2NTEzfQ.t39T7jLyz3skg1csP_Me5IIayeydY4qArghzQS3eZec';
